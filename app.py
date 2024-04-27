@@ -26,18 +26,19 @@ def fetch_data():
         return pd.DataFrame()
 
 def filter_data(df, start_date, end_date, prediction):
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    df['confidence'] = pd.to_numeric(df['confidence'])
-    filtered = df[(df['timestamp'] >= pd.to_datetime(start_date)) & (df['timestamp'] <= pd.to_datetime(end_date))]
-    if prediction != 'all':
+    df['timestamp'] = pd.to_datetime(df['timestamp']) # mengubah format timestamp yang tadinya string menjadi datetime objek
+    df['confidence'] = pd.to_numeric(df['confidence']) # merubah format confidence yang tadinya string menjadi numerical
+    filtered = df[(df['timestamp'] >= pd.to_datetime(start_date)) & (df['timestamp'] <= pd.to_datetime(end_date))] #melakukan filter datetime
+    if prediction != 'all': #jika jenis prediction tidak all maka akan melakukan filter tambahan dia masuk prediksi yang mana
         filtered = filtered[filtered['prediction'] == prediction]
     return filtered
 
 def plot_confidence(df, time_frame, threshold=0.6):
+    #jika data kosong maka akan ada tulisan no data to plot
     if df.empty:
         st.write("No data to plot.")
-        return
-
+        return #supaya function berhenti disitu atau melakukan return None
+    
     df.set_index('timestamp', inplace=True)
     if time_frame == 'Hourly':
         df_resample = df['confidence'].resample('H').mean()
@@ -48,28 +49,32 @@ def plot_confidence(df, time_frame, threshold=0.6):
     elif time_frame == 'Yearly':
         df_resample = df['confidence'].resample('A').mean()
 
-    plt.figure(figsize=(10, 4))
-    plt.plot(df_resample.index, df_resample, marker='o', linestyle='-')
-    plt.title(f'Mean Confidence Scores: {time_frame}')
-    plt.ylabel('Mean Confidence')
-    plt.xlabel('Time')
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.ylim(0, 1)  # Set the limits of the y-axis to be between 0 and 1
+    plt.figure(figsize=(10, 4)) #menyesuaikan shape dari plot figure
+    plt.plot(df_resample.index, df_resample, marker='o', linestyle='-') #melakukan plot pada data dari hasil resample
+    plt.title(f'Mean Confidence Scores: {time_frame}') # memberikan title
+    plt.ylabel('Mean Confidence') # set y label
+    plt.xlabel('Time') # set x label
+    plt.grid(True) #menambahkan grid supaya mudah dilihat
+    plt.xticks(rotation=45) #melakukan rotasi 45 derajat
+    plt.ylim(0, 1)  # Set the limits of the y-axis to be between 0 and 1 
     plt.axhline(y=threshold, color='r', linestyle='--')  # Add a red horizontal line at the threshold
     st.pyplot(plt)
 
 # Streamlit UI Components
 st.title("DynamoDB Data Viewer for Uncertainty Table")
 
-default_start_date = datetime.date.today() - datetime.timedelta(days=30)
+default_start_date = datetime.date.today() - datetime.timedelta(days=366)
 
 data = fetch_data()
 print(data)
-with st.sidebar:
+with st.sidebar: #untuk menaruh keseluruhan komponen ke kiri
+    # set threshold menggunakan number_input
     threshold = st.number_input("Threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
+    # set start date dengan kompnen date_input
     start_date = st.date_input("Start Date", value=default_start_date)
+    # set end date dengan komponen date_input
     end_date = st.date_input("End Date")
+    # set filter prediction type dengan selectbox
     prediction = st.selectbox("Prediction Type", ["All", "Positive", "Negative"]).lower()
     time_frame = st.selectbox("Aggregate Time Frame", ["Hourly", "Daily", "Monthly", "Yearly"])
 
