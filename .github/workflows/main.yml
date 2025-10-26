@@ -30,7 +30,6 @@ jobs:
           ECR_REPOSITORY: sentiment-class
           IMAGE_TAG: latest
         run: |
-          # docker build -f Dockerfile.aws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to AWS Lambda
