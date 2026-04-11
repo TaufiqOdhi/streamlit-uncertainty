@@ -1,3 +1,3 @@
 # streamlit-uncertainty
 
-test ssh-key
+test gpg-key
